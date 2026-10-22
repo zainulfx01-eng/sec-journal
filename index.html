@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark light" />
+  <meta name="theme-color" content="#0E0E10" />
+  <title>Zainul FX Journal</title>
+  <link rel="stylesheet" href="styles.css" />
+  <!-- Telegram Mini Apps SDK. Loads only inside Telegram; harmless in a plain browser. -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+  <div id="app-shell" class="shell">
+    <header class="topbar">
+      <button id="back-btn" class="icon-btn hidden" aria-label="Back">&#8592;</button>
+      <div class="brand"><span class="brand-mark">Z</span><span class="brand-name">Zainul FX Journal</span></div>
+      <span id="mode-badge" class="badge">Local</span>
+    </header>
+
+    <div id="notice" class="notice hidden" role="status"></div>
+
+    <main id="view" class="view" aria-live="polite">
+      <div class="loading">Loading your journal…</div>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Main">
+      <button data-tab="dashboard" class="nav-btn">Dashboard</button>
+      <button data-tab="journal" class="nav-btn">Journal</button>
+      <button data-tab="analytics" class="nav-btn">Analytics</button>
+      <button data-tab="calculator" class="nav-btn">Calculator</button>
+      <button data-tab="settings" class="nav-btn">Settings</button>
+    </nav>
+
+    <button id="fab" class="fab" aria-label="Add trade">+</button>
+  </div>
+
+  <div id="modal-root"></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
