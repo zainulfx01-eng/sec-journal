@@ -184,7 +184,7 @@ function renderShotsSection(t, ctx) {
   const full = usage.level === 'full' ? '<p class="small neg">Screenshot storage is full. Delete screenshots before adding more.</p>' : '';
   const html = `<div class="shots" data-trade="${esc(t.id)}">
     <h3 style="margin:14px 0 6px">Screenshots <span class="muted small">(stored on this device only)</span></h3>
-    ${shots.length ? `<div class="shot-grid">${shots.map((s) => `<figure class="shot"><img src="${s.dataUrl}" alt="${esc(s.kind)} screenshot" loading="lazy"/><figcaption class="small muted">${esc(s.kind)}</figcaption><button class="btn ghost small" data-shot-del="${esc(s.id)}">Delete</button></figure>`).join('')}</div>` : '<p class="muted small">No screenshots yet. Add a before and after image for this trade.</p>'}
+    ${shots.length ? `<div class="shot-grid">${shots.map((s) => `<figure class="shot"><img class="shot-img" data-shot-view="${esc(s.id)}" src="${s.dataUrl}" alt="${esc(s.kind)} screenshot" loading="lazy"/><figcaption class="small muted">${esc(s.kind)}</figcaption><button class="btn ghost small" data-shot-del="${esc(s.id)}">Delete</button></figure>`).join('')}</div>` : '<p class="muted small">No screenshots yet. Add a before and after image for this trade.</p>'}
     ${warn}${full}
     <div class="row" style="gap:8px;margin-top:8px"><select id="shot-kind" aria-label="Screenshot kind"><option value="before">Before</option><option value="after">After</option></select>
     <label class="btn">Add screenshot<input type="file" accept="image/*" id="shot-file" hidden/></label></div>
@@ -213,6 +213,15 @@ export function wireShots(root, t, ctx, refresh) {
       err.textContent = e.message || 'Could not add that image.';
     }
   });
+  root.querySelectorAll('[data-shot-view]').forEach((img) => img.addEventListener('click', () => {
+    const s = (t.screenshots || []).find((x) => x.id === img.dataset.shotView);
+    if (!s) return;
+    const lb = document.createElement('div');
+    lb.className = 'lightbox';
+    lb.innerHTML = `<img src="${s.dataUrl}" alt="${esc(s.kind)} screenshot"/><span class="small muted">${esc(s.kind)} · tap anywhere to close</span>`;
+    lb.addEventListener('click', () => lb.remove());
+    document.body.appendChild(lb);
+  }));
   root.querySelectorAll('[data-shot-del]').forEach((b) => b.addEventListener('click', async () => {
     if (!(await confirmDialog('Delete screenshot?', 'This removes the image from this device.'))) return;
     const r = ctx.store.removeScreenshot(t.id, b.dataset.shotDel);
