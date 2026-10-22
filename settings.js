@@ -23,7 +23,7 @@ export function renderSettings(view, ctx) {
     <div class="card">
       <h3>Instrument specs</h3>
       <p class="small muted">Defaults are estimates. Set pip size, contract size and quote currency to match your broker.</p>
-      <div id="inst-list">${[...DEFAULT_INSTRUMENTS, ...Object.values(custom)].map((d) => `<div class="line"><span>${esc(d.symbol)}</span><span class="muted small">pip ${d.pipSize}, size ${d.contractSize}, ${esc(d.quoteCurrency)}${custom[d.symbol] ? ' (custom)' : ''}</span></div>`).join('')}</div>
+      <div id="inst-list">${[...Object.values(DEFAULT_INSTRUMENTS), ...Object.values(custom)].map((d) => `<div class="line"><span>${esc(d.symbol)}</span><span class="muted small">pip ${d.pipSize}, size ${d.contractSize}, ${esc(d.quoteCurrency)}${custom[d.symbol] ? ' (custom)' : ''}</span></div>`).join('')}</div>
       <button class="btn" id="inst-add">Add or override instrument</button>
     </div>
     <div class="card">
