@@ -17,7 +17,7 @@ const TABS = {
   settings: renderSettings,
 };
 
-export const ctx = { store: null, tab: 'dashboard', route: {} };
+export const ctx = { store: null, tab: 'dashboard', route: {}, rerender: null };
 
 function go(tab, route = {}) {
   ctx.tab = tab in TABS ? tab : 'dashboard';
@@ -29,6 +29,7 @@ function go(tab, route = {}) {
 }
 
 export function render() {
+  ctx.rerender = render;
   const view = $('#view');
   try {
     TABS[ctx.tab](view, ctx);
@@ -58,6 +59,7 @@ function boot() {
     return;
   }
   ctx.store = createStore(storage);
+  ctx.rerender = render;
   const r = ctx.store.load();
   if (!r.ok) showNotice(r.error, 'error');
 
