@@ -2,8 +2,30 @@
 // Pure data: no DOM access, safe to import from tests.
 
 export const APP_NAME = 'Zainul FX Journal';
-export const SCHEMA_VERSION = 1;
+// Schema 2 (Stage 2): adds trade.screenshots[] and the reflections map. Migration is additive.
+// The storage key stays the same so existing Stage 1 data is never orphaned.
+export const SCHEMA_VERSION = 2;
 export const STORAGE_KEY = 'zainul-fx-journal:v1';
+
+// Journal calendar and analytics use this timezone for day boundaries (Nigeria, WAT, UTC+1, no DST).
+export const APP_TIMEZONE = 'Africa/Lagos';
+
+// Daily reflection fields, in display order. Stored per date (YYYY-MM-DD).
+export const REFLECTION_FIELDS = [
+  { key: 'did_well', label: 'What I did well' },
+  { key: 'did_poorly', label: 'What I did poorly' },
+  { key: 'main_lesson', label: 'Main lesson' },
+  { key: 'improve_tomorrow', label: 'What I will improve tomorrow' },
+];
+export const MAX_REFLECTION = 1000;
+
+// Screenshot attachments: stored as compressed JPEG data URLs INSIDE localStorage (local-only until Stage 3).
+export const SHOT_KINDS = ['before', 'after'];
+export const SHOT_MAX_DIM = 1280;          // longest side in pixels after resize
+export const SHOT_JPEG_QUALITY = 0.7;
+export const SHOT_MAX_PER_TRADE = 6;
+export const SHOT_TOTAL_CAP_CHARS = 4 * 1024 * 1024; // hard cap on total screenshot data across the journal
+export const SHOT_WARN_RATIO = 0.8;        // warn once usage reaches 80% of the cap
 
 export const DIRECTIONS = ['long', 'short'];
 export const STATUSES = ['open', 'closed'];
