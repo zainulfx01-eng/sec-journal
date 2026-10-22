@@ -3,6 +3,7 @@ import { esc, money, plClass, fmtDate, openModal, confirmDialog, toast, isoToLoc
 import { filterTrades, sortTrades, distinctValues, validateTrade } from './trades.js';
 import { SESSIONS, DIRECTIONS, STATUSES, PLAN_VALUES, MAX_TEXT, MAX_SHORT_TEXT } from './config.js';
 import { setBackButton } from './telegram.js';
+import { screenshotUsage, compressImageFile } from './shots.js';
 
 const SORTS = [['date-desc', 'Newest'], ['date-asc', 'Oldest'], ['symbol-asc', 'Symbol'], ['result-desc', 'Result'], ['pl-desc', 'P/L high'], ['pl-asc', 'P/L low']];
 const RESULTS = [['all', 'All'], ['profit', 'Profit'], ['loss', 'Loss'], ['breakeven', 'BE'], ['open', 'Open']];
@@ -64,14 +65,20 @@ function openTradeView(id, ctx) {
     ['Emotions before / during', `${t.emotionsBefore || '—'} / ${t.emotionsDuring || '—'}`], ['Plan followed', t.planFollowed || '—'], ['Mistakes', t.mistakes], ['Lessons', t.lessons],
     ['Last updated', fmtDate(t.updatedAt)]];
   const body = `<div class="table-list">${rows.filter(([, v]) => v != null && v !== '').map(([k, v]) => `<div class="line"><span class="muted" style="width:44%">${esc(k)}</span><span style="flex:1;overflow-wrap:anywhere">${esc(v)}</span></div>`).join('')}</div>`;
+  const shotsHtml = renderShotsSection(t, ctx);
+  const bodyEl = document.createElement('div');
+  bodyEl.innerHTML = body + shotsHtml;
   const m = openModal({
     title: `${t.instrument} ${t.direction}`,
-    body,
+    body: bodyEl,
     actions: [
       { label: 'Delete', kind: 'danger', onClick: async (close) => { if (await confirmDialog('Delete trade?', 'This removes the trade from this device. Export a backup first if you want to keep it.')) { ctx.store.deleteTrade(t.id); close(); toast('Trade deleted'); renderJournal(document.querySelector('#view'), ctx); } } },
       { label: 'Edit', kind: 'primary', onClick: (close) => { close(); openTradeForm(t, ctx); } },
     ],
   });
+  // Re-open the trade view after a screenshot change so the list stays fresh.
+  const refresh = () => { m.close(); openTradeView(t.id, ctx); };
+  wireShots(bodyEl, t, ctx, refresh);
   void m;
 }
 
@@ -165,8 +172,52 @@ function submit(body, trade, ctx, close) {
   }
   close();
   toast(trade ? 'Trade updated' : 'Trade saved');
-  const view = document.querySelector('#view');
-  // Re-render the current tab; keep it simple and always correct.
-  import('../app.js').then((m) => m.render());
-  void view;
+  // Re-render the current tab through the router (set in app.js).
+  if (ctx.rerender) ctx.rerender();
+}
+
+// Screenshot attachments on a trade. Local-only storage (Stage 2); Stage 3 moves them to Supabase.
+function renderShotsSection(t, ctx) {
+  const shots = Array.isArray(t.screenshots) ? t.screenshots : [];
+  const usage = screenshotUsage(ctx.store.state.trades);
+  const warn = usage.level === 'warn' ? `<p class="small warn-text">Screenshot storage is at ${Math.round(usage.ratio * 100)}% of the 4 MB local cap. Remove old ones or export a backup.</p>` : '';
+  const full = usage.level === 'full' ? '<p class="small neg">Screenshot storage is full. Delete screenshots before adding more.</p>' : '';
+  const html = `<div class="shots" data-trade="${esc(t.id)}">
+    <h3 style="margin:14px 0 6px">Screenshots <span class="muted small">(stored on this device only)</span></h3>
+    ${shots.length ? `<div class="shot-grid">${shots.map((s) => `<figure class="shot"><img src="${s.dataUrl}" alt="${esc(s.kind)} screenshot" loading="lazy"/><figcaption class="small muted">${esc(s.kind)}</figcaption><button class="btn ghost small" data-shot-del="${esc(s.id)}">Delete</button></figure>`).join('')}</div>` : '<p class="muted small">No screenshots yet. Add a before and after image for this trade.</p>'}
+    ${warn}${full}
+    <div class="row" style="gap:8px;margin-top:8px"><select id="shot-kind" aria-label="Screenshot kind"><option value="before">Before</option><option value="after">After</option></select>
+    <label class="btn">Add screenshot<input type="file" accept="image/*" id="shot-file" hidden/></label></div>
+    <div class="error" id="shot-err"></div>
+  </div>`;
+  return html;
+}
+
+// Wire the screenshot controls after the modal is open. Call from openTradeView via the modal body.
+export function wireShots(root, t, ctx, refresh) {
+  const file = root.querySelector('#shot-file');
+  if (file) file.addEventListener('change', async () => {
+    const f = file.files && file.files[0];
+    file.value = '';
+    if (!f) return;
+    const err = root.querySelector('#shot-err');
+    err.textContent = '';
+    try {
+      const kind = root.querySelector('#shot-kind').value;
+      const img = await compressImageFile(f);
+      const r = ctx.store.addScreenshot(t.id, { kind, ...img });
+      if (!r.ok) { err.textContent = r.error; return; }
+      toast('Screenshot saved');
+      refresh();
+    } catch (e) {
+      err.textContent = e.message || 'Could not add that image.';
+    }
+  });
+  root.querySelectorAll('[data-shot-del]').forEach((b) => b.addEventListener('click', async () => {
+    if (!(await confirmDialog('Delete screenshot?', 'This removes the image from this device.'))) return;
+    const r = ctx.store.removeScreenshot(t.id, b.dataset.shotDel);
+    if (!r.ok) { toast(r.error || 'Could not delete'); return; }
+    toast('Screenshot deleted');
+    refresh();
+  }));
 }
