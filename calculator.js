@@ -8,7 +8,7 @@ export function renderCalculator(view, ctx) {
   const cur = s.accountCurrency || 'USD';
   const mode = ctx.calcMode || 'plan';
   const specs = { ...(s.customInstruments || {}) };
-  const instruments = [...new Set([...DEFAULT_INSTRUMENTS.map((d) => d.symbol), ...Object.keys(specs)])];
+  const instruments = [...new Set([...Object.values(DEFAULT_INSTRUMENTS).map((d) => d.symbol), ...Object.keys(specs)])];
 
   view.innerHTML = `
     <h1>Calculator</h1>
