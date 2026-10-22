@@ -1,11 +1,11 @@
 {
   "name": "zainul-fx-journal",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
-  "description": "Zainul FX Journal - Telegram Mini App (Stage 1, static, local-only)",
+  "description": "Zainul FX Journal - Telegram Mini App (Stage 2, static, local-only)",
   "scripts": {
-    "test": "node --test tests/"
+    "test": "node --test logic.test.js io.test.js stage2.test.js"
   },
   "license": "UNLICENSED"
 }
