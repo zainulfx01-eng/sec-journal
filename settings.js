@@ -83,12 +83,12 @@ export function renderSettings(view, ctx) {
     const r = ctx.store.importBackup(text);
     if (!r.ok) return showNotice(r.error, 'error');
     toast(`Backup restored (${r.count} trades)`);
-    ctx.render();
+    ctx.rerender();
   });
 
   view.querySelector('#wipe').addEventListener('click', async () => {
     const ok = await confirmDialog('Delete all local data?', 'This removes every trade and setting from this device. Export a backup first if you might need it.', 'Delete everything');
-    if (ok) { ctx.store.clearAll(); toast('Local data cleared'); ctx.render(); }
+    if (ok) { ctx.store.clearAll(); toast('Local data cleared'); ctx.rerender(); }
   });
 }
 
@@ -115,7 +115,7 @@ function openInstrumentForm(ctx) {
         ctx.store.updateSettings({ customInstruments: { ...(ctx.store.state.settings.customInstruments || {}), [sym]: { symbol: sym, pipSize: pip, contractSize: size, quoteCurrency: q, source: 'custom', known: true } } });
         c();
         toast('Instrument saved');
-        ctx.render();
+        ctx.rerender();
       } },
     ],
   });
@@ -152,7 +152,7 @@ function showImportPreview(ctx, text) {
         if (!sr.ok) return toast(sr.error || 'Save failed. Nothing was imported.');
         c();
         toast(`Imported ${importable.length}, skipped ${r.counts.total - importable.length}`);
-        ctx.render();
+        ctx.rerender();
       } },
     ],
   });
