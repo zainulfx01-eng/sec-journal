@@ -143,3 +143,51 @@ h2 { font-size: 16px; margin: 0 0 8px; color: var(--text); }
 .preview-table .duplicate td { color: var(--gold); }
 
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(90px + var(--safe-b)); background: var(--surface-2); border: 1px solid var(--gold); color: var(--text); padding: 10px 14px; border-radius: 12px; z-index: 30; font-size: 14px; max-width: 90vw; }
+
+/* ---- Stage 2: analytics, calendar, discipline, screenshots ---- */
+.seg { display: flex; gap: 6px; overflow-x: auto; margin: 6px 0 10px; padding-bottom: 2px; }
+.seg-btn { flex: 0 0 auto; background: var(--surface); border: 1px solid var(--border); color: var(--muted); border-radius: 999px; padding: 7px 12px; font-size: 13px; cursor: pointer; }
+.seg-btn.on { background: var(--gold); border-color: var(--gold); color: #0e0e10; font-weight: 600; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+button.chip { cursor: pointer; background: transparent; font: inherit; }
+button.chip.on { background: var(--gold-soft); color: var(--gold); border-color: var(--gold); }
+.kv { display: flex; flex-direction: column; gap: 2px; }
+.line { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 14px; min-width: 0; }
+.line:last-child { border-bottom: 0; }
+.line > span:last-child { text-align: right; overflow-wrap: anywhere; }
+.bd-row { margin-bottom: 8px; min-width: 0; }
+.bar { height: 6px; border-radius: 4px; background: var(--border); overflow: hidden; margin-top: 4px; }
+.bar i { display: block; height: 100%; border-radius: 4px; }
+.bar i.pos { background: var(--profit); }
+.bar i.neg { background: var(--loss); }
+.mini-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+.mini-table th, .mini-table td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--border); }
+.warn-text { color: var(--gold); }
+.cal-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.cal-head .btn { min-width: 44px; padding: 6px 10px; }
+.cal-dow, .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; min-width: 0; }
+.cal-dow span { text-align: center; font-size: 11px; color: var(--muted); }
+.cal-day { min-width: 0; min-height: 50px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px 2px; cursor: pointer; font: inherit; }
+.cal-day.blank { border: 0; background: transparent; cursor: default; }
+.cal-day .dn { font-size: 12px; }
+.cal-day .dv { font-size: 11px; font-weight: 700; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cal-day.profit { background: rgba(46, 204, 113, 0.18); border-color: var(--profit); }
+.cal-day.profit .dv { color: var(--profit); }
+.cal-day.loss { background: rgba(231, 76, 60, 0.18); border-color: var(--loss); }
+.cal-day.loss .dv { color: var(--loss); }
+.cal-day.be { background: var(--surface); border-color: var(--be); }
+.cal-day.be .dv { color: var(--be); }
+.cal-day.open .dv { color: var(--gold); }
+.cal-day.today { outline: 1px solid var(--gold); }
+.cal-day.sel { box-shadow: inset 0 0 0 2px var(--gold); }
+.cal-legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+.cal-legend .sw { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; vertical-align: middle; }
+.sw.profit { background: var(--profit); }
+.sw.loss { background: var(--loss); }
+.sw.be { background: var(--be); }
+.sw.none { background: var(--border); }
+.trade-mini { padding: 8px 0; border-bottom: 1px solid var(--border); min-width: 0; }
+.shots { border-top: 1px solid var(--border); margin-top: 10px; padding-top: 4px; }
+.shot-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; min-width: 0; }
+.shot { margin: 0; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.shot img { width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--border); }
