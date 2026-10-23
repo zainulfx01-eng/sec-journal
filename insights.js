@@ -4,7 +4,7 @@
 // Days are bucketed in APP_TIMEZONE (Africa/Lagos, WAT). Closed trades count on their exit day.
 import { classifyResult, BE_EPS, round1, round2 } from './calc.js';
 import { APP_TIMEZONE, REFLECTION_FIELDS, MAX_REFLECTION } from './config.js';
-import { computeStats } from './trades.js';
+import { computeStats, closedInPeriod, cumulativePLCurve } from './trades.js';
 
 export const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 export const DISCIPLINE_NOTE = 'These are descriptive patterns in your own notes. They show what showed up together, not what caused wins or losses, and they do not predict or guarantee profitability.';
@@ -386,4 +386,41 @@ export function sanitizeReflections(obj) {
     out[k] = entry;
   }
   return out;
+}
+
+// --- Stage 4: dashboard headline and setup breakdown ------------------------
+// Headline figures for the dashboard period. Uses the same closed-trade set as computeStats.
+// avgWin is a positive number, avgLoss is a negative number (or null when that side has no trades).
+export function dashboardHeadline(trades, { period = 'all', startingBalance = null, now = new Date() } = {}) {
+  const list = closedInPeriod(trades, period, now);
+  const sum = summarize(list);
+  const st = computeStats(trades, { period, startingBalance, now });
+  return {
+    n: sum.n,
+    net: sum.net,
+    winRate: sum.winRate,
+    winners: sum.winners,
+    losers: sum.losers,
+    breakeven: sum.breakeven,
+    profitFactor: sum.profitFactor,           // null when there are no gross losses
+    grossWin: sum.grossWin,
+    grossLoss: sum.grossLoss,
+    avgWin: sum.avgWin,
+    avgLoss: sum.avgLoss,
+    avgWinLossRatio: sum.avgWin != null && sum.avgLoss != null && sum.avgLoss !== 0 ? round2(sum.avgWin / Math.abs(sum.avgLoss)) : null,
+    maxDrawdownAbs: st.maxDrawdownAbs,
+    maxDrawdownPct: st.maxDrawdownPct,
+  };
+}
+
+// Win rate and totals per setup tag (the trade's strategy field). Blank tags group under 'Unspecified'.
+// Sorted by closed trade count (most used setups first), then by name.
+export function setupWinRates(trades, { period = 'all', now = new Date() } = {}) {
+  const rows = groupBy(closedInPeriod(trades, period, now), (t) => t.strategy);
+  return rows.sort((a, b) => b.n - a.n || a.key.localeCompare(b.key));
+}
+
+// Cumulative net P/L curve for the period (starts at 0). Points match the equity chart shape.
+export function cumulativePL(trades, { period = 'all', now = new Date() } = {}) {
+  return cumulativePLCurve(trades, { period, now });
 }
