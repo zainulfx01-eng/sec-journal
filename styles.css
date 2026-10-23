@@ -38,7 +38,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .shell { min-height: 100dvh; display: flex; flex-direction: column; padding-bottom: calc(76px + var(--safe-b)); }
 .topbar { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: var(--bg); border-bottom: 1px solid var(--border); }
 .brand { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
-.brand-mark { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 8px; background: var(--gold); color: #0e0e10; font-weight: 800; }
+.brand-mark { width: 30px; height: 30px; border-radius: 8px; object-fit: cover; flex: none; }
 .brand-name { font-weight: 700; letter-spacing: .2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .badge { font-size: 11px; padding: 4px 8px; border-radius: 999px; border: 1px solid var(--gold); color: var(--gold); }
 .icon-btn { background: transparent; border: 0; font-size: 20px; color: var(--text); padding: 4px 8px; cursor: pointer; }
