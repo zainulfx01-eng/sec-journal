@@ -48,8 +48,12 @@ export function migrate(raw) {
 }
 
 // storage: any object with getItem/setItem/removeItem (window.localStorage in browser, Map-backed in tests).
-export function createStore(storage, key = STORAGE_KEY) {
+// hooks (optional, Stage 3): { onChange(table, id), onDelete(table, id) } are called after every local mutation
+// so the sync queue can record it. Remote applies (applyRemote*) never call hooks, so sync cannot echo itself.
+export function createStore(storage, key = STORAGE_KEY, hooks = {}) {
   let state = null;
+  const changed = (table, id) => { try { hooks.onChange && hooks.onChange(table, id); } catch (_) { /* never block a local save */ } };
+  const deleted = (table, id) => { try { hooks.onDelete && hooks.onDelete(table, id); } catch (_) { /* never block a local save */ } };
 
   function load() {
     let text = null;
@@ -84,6 +88,26 @@ export function createStore(storage, key = STORAGE_KEY) {
     get state() { return state; },
     set state(s) { state = s; },
     get trades() { return state ? state.trades : []; },
+    // Stage 3 sync: write remote data into local state WITHOUT firing hooks (no echo back to the cloud).
+    applyRemoteTrade(t) {
+      const idx = state.trades.findIndex((x) => x.id === t.id);
+      if (idx >= 0) state.trades[idx] = t; else state.trades.push(t);
+      return save();
+    },
+    removeLocalTrade(id) {
+      state.trades = state.trades.filter((x) => x.id !== id);
+      return save();
+    },
+    applyRemoteReflection(dateKey, value) {
+      state.reflections = { ...(state.reflections || {}), [dateKey]: { ...value } };
+      return save();
+    },
+    removeLocalReflection(dateKey) {
+      const next = { ...(state.reflections || {}) };
+      delete next[dateKey];
+      state.reflections = next;
+      return save();
+    },
     upsertTrade(raw) {
       const { valid, errors, trade } = validateTrade(raw);
       if (!valid) return { ok: false, errors };
@@ -94,6 +118,7 @@ export function createStore(storage, key = STORAGE_KEY) {
       const stored = { ...trade, id: trade.id || createId(), createdAt: existing?.createdAt || now, updatedAt: now, screenshots: existing?.screenshots || [] };
       if (idx >= 0) state.trades[idx] = stored; else state.trades.push(stored);
       const r = save();
+      if (r.ok) changed('trades', stored.id);
       return r.ok ? { ok: true, trade: stored } : { ok: false, errors: { _save: r.error } };
     },
     // Screenshots: data URLs already compressed by the caller (shots.js). Enforces per-trade and total caps.
@@ -111,6 +136,7 @@ export function createStore(storage, key = STORAGE_KEY) {
       const item = { id: createId(), kind: shot.kind, dataUrl: shot.dataUrl, width: shot.width || null, height: shot.height || null, bytes: shot.dataUrl.length, createdAt: new Date().toISOString() };
       t.screenshots = [...list, item];
       const r = save();
+      if (r.ok) changed('trades', tradeId);
       return r.ok ? { ok: true, shot: item } : { ok: false, error: r.error };
     },
     removeScreenshot(tradeId, shotId) {
@@ -119,7 +145,9 @@ export function createStore(storage, key = STORAGE_KEY) {
       const before = (t.screenshots || []).length;
       t.screenshots = (t.screenshots || []).filter((s) => s.id !== shotId);
       if (t.screenshots.length === before) return { ok: false, error: 'Screenshot not found.' };
-      return save();
+      const r = save();
+      if (r.ok) changed('trades', tradeId);
+      return r;
     },
     // Reflections: one entry per date. Empty text for every field is rejected; use deleteReflection.
     setReflection(dateKey, raw) {
@@ -127,6 +155,7 @@ export function createStore(storage, key = STORAGE_KEY) {
       if (!v.valid) return { ok: false, errors: v.errors };
       state.reflections = { ...(state.reflections || {}), [dateKey]: { ...v.value, updatedAt: new Date().toISOString() } };
       const r = save();
+      if (r.ok) changed('reflections', dateKey);
       return r.ok ? { ok: true } : { ok: false, errors: { _save: r.error } };
     },
     deleteReflection(dateKey) {
@@ -134,20 +163,26 @@ export function createStore(storage, key = STORAGE_KEY) {
       const next = { ...state.reflections };
       delete next[dateKey];
       state.reflections = next;
-      return save();
+      const r = save();
+      if (r.ok) deleted('reflections', dateKey);
+      return r;
     },
     deleteTrade(id) {
       const before = state.trades.length;
       state.trades = state.trades.filter((t) => t.id !== id);
       if (state.trades.length === before) return { ok: false, error: 'Trade not found.' };
-      return save();
+      const r = save();
+      if (r.ok) deleted('trades', id);
+      return r;
     },
     // Bulk add already-validated normalised trades (used by CSV import).
     addTrades(list) {
       const now = new Date().toISOString();
       for (const t of list) {
         const n = normalizeTrade(t);
-        state.trades.push({ ...n, id: createId(), createdAt: now, updatedAt: now });
+        const id = createId();
+        state.trades.push({ ...n, id, createdAt: now, updatedAt: now, screenshots: [] });
+        changed('trades', id);
       }
       return save();
     },
@@ -177,6 +212,8 @@ export function createStore(storage, key = STORAGE_KEY) {
       state = next;
       const r = save();
       if (!r.ok) { state = previous; return { ok: false, error: r.error }; }
+      for (const t of next.trades) changed('trades', t.id);
+      for (const d of Object.keys(next.reflections || {})) changed('reflections', d);
       return { ok: true, count: next.trades.length };
     },
   };
