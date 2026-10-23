@@ -41,9 +41,9 @@ const PRECACHE = [
   './pwa.js',
   './offline.html',
   './manifest.json',
-  './icogggn-512.png',
-  './icon-19fff2.png',
-  './icon-maskable-g512.png',
+  './icon-512.png',
+  './icon-192.png',
+  './icon-maskable-512.png',
 ];
 
 // Pure routing decision, so it can be tested. Returns 'bypass' (do not touch), 'cache' (cache first, then network), or 'navigate'.
