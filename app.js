@@ -1,7 +1,8 @@
 // App entry: boots storage, Telegram shell, router and bottom navigation.
 import { initShell, getTelegram, setBackButton, haptic } from './telegram.js';
 import { createStore } from './storage.js';
-import { APP_NAME } from './config.js';
+import { APP_NAME, STORAGE_KEY } from './config.js';
+import { createCloud } from './cloud.js';
 import { $, $$, showNotice, toast } from './ui.js';
 import { renderDashboard } from './dashboard.js';
 import { renderJournal, openTradeForm } from './journal.js';
@@ -46,9 +47,8 @@ export function navigate(tab, route) { go(tab, route); }
 function boot() {
   const info = initShell({ onBack: () => go(ctx.tab) });
   const badge = $('#mode-badge');
-  badge.textContent = info.mode === 'telegram' ? 'Telegram' : 'Browser demo';
   if (info.mode !== 'telegram') {
-    showNotice('Opened in a plain browser. Data is stored only on this device, not synced to Telegram.', 'warn');
+    showNotice('Opened in a plain browser. Your journal is saved on this device. Sign in under Settings to sync it.', 'warn');
   }
 
   let storage;
@@ -58,10 +58,16 @@ function boot() {
     $('#view').innerHTML = '<div class="empty"><h2>Storage unavailable</h2><p>Enable site storage in your browser or Telegram settings, then reload.</p></div>';
     return;
   }
-  ctx.store = createStore(storage);
+  // Stage 3: cloud is created before the store so its hooks can be passed in. Signed out = local-only (no queueing).
+  ctx.cloud = createCloud({ storage });
+  ctx.store = createStore(storage, STORAGE_KEY, ctx.cloud.hooks);
   ctx.rerender = render;
   const r = ctx.store.load();
   if (!r.ok) showNotice(r.error, 'error');
+  ctx.cloud.attach(ctx.store, { onRemoteChange: () => { if (ctx.tab) render(); } });
+  ctx.cloud.onStatus(paintSyncChip);
+  paintSyncChip(ctx.cloud.status());
+  window.addEventListener('online', () => ctx.cloud.kick());
 
   $$('.nav-btn').forEach((b) => b.addEventListener('click', () => { haptic('light'); go(b.dataset.tab); }));
   $('#fab').addEventListener('click', () => openTradeForm(null, ctx));
@@ -70,6 +76,15 @@ function boot() {
 
   const tg = getTelegram();
   try { tg && tg.setHeaderColor && tg.setHeaderColor('#0E0E10'); tg && tg.setBackgroundColor && tg.setBackgroundColor('#0E0E10'); } catch (_) {}
+}
+
+// Header chip: Local only / Synced / Syncing / Offline / Error.
+function paintSyncChip(st) {
+  const el = document.querySelector('#mode-badge');
+  if (!el || !ctx.cloud) return;
+  const label = { local: 'Local only', 'signed-out': 'Local only', synced: 'Synced', syncing: 'Syncing', pending: 'Pending', offline: 'Offline', error: 'Error' }[st.state] || 'Local only';
+  el.textContent = label;
+  el.dataset.syncState = st.state;
 }
 
 boot();
