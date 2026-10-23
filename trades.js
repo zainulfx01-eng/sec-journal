@@ -208,8 +208,8 @@ export function periodRange(period, now = new Date()) {
   return { from: start.getTime(), to: now.getTime() + 1 };
 }
 
-// Compute dashboard stats from closed trades within a period. Open trades are excluded from P/L.
-export function computeStats(trades, { period = 'all', startingBalance = null, now = new Date() } = {}) {
+// Closed trades with a usable net P/L inside the period, oldest first (by exit, else entry). Open trades never count.
+export function closedInPeriod(trades, period = 'all', now = new Date()) {
   const range = periodRange(period, now);
   const inPeriod = (t) => {
     if (!range) return true;
@@ -217,9 +217,25 @@ export function computeStats(trades, { period = 'all', startingBalance = null, n
     const ms = ref ? new Date(ref).getTime() : NaN;
     return !Number.isNaN(ms) && ms >= range.from && ms < range.to;
   };
-  const closed = trades
+  return trades
     .filter((t) => t.status === 'closed' && t.netPL != null && !Number.isNaN(t.netPL) && inPeriod(t))
     .sort((a, b) => new Date(a.exitTime || a.entryTime) - new Date(b.exitTime || b.entryTime));
+}
+
+// Cumulative net P/L curve (starts at 0, ignores any starting balance). Same point shape as computeStats().curve.
+export function cumulativePLCurve(trades, { period = 'all', now = new Date() } = {}) {
+  let running = 0;
+  const curve = [{ x: 'start', t: null, y: 0, label: 'Start', pl: 0 }];
+  for (const t of closedInPeriod(trades, period, now)) {
+    running += t.netPL;
+    curve.push({ x: t.exitTime || t.entryTime, t: t.id, y: round2(running), label: t.instrument, pl: t.netPL });
+  }
+  return curve;
+}
+
+// Compute dashboard stats from closed trades within a period. Open trades are excluded from P/L.
+export function computeStats(trades, { period = 'all', startingBalance = null, now = new Date() } = {}) {
+  const closed = closedInPeriod(trades, period, now);
 
   let winners = 0, losers = 0, breakeven = 0, grossWin = 0, grossLoss = 0, net = 0;
   const rs = [];
