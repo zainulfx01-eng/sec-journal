@@ -38,6 +38,12 @@ const PRECACHE = [
   './telegram.js',
   './trades.js',
   './ui.js',
+  './pwa.js',
+  './offline.html',
+  './manifest.json',
+  './icon-maskable-512.png',
+  './icon-512.png',
+  './icon-192.png',
 ];
 
 // Pure routing decision, so it can be tested. Returns 'bypass' (do not touch), 'cache' (cache first, then network), or 'navigate'.
