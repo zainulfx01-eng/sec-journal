@@ -2,6 +2,7 @@
 import { esc, toast, download, openModal, confirmDialog, showNotice } from './ui.js';
 import { DEFAULT_INSTRUMENTS } from './config.js';
 import { analyzeImport, tradesToCSV, exampleCSV } from './csv.js';
+import { renderAccountCard } from './account.js';
 
 export function renderSettings(view, ctx) {
   const s = ctx.store.state.settings;
@@ -11,7 +12,7 @@ export function renderSettings(view, ctx) {
 
   view.innerHTML = `
     <h1>Settings</h1>
-    <div class="notice">Stage 1 stores data only on this device (unsynced local). Export a backup before clearing browser data.</div>
+    <div class="notice">Your journal is always saved on this device first. With an account, it also syncs to the cloud. Export a backup before clearing browser data.</div>
     <div class="card">
       <h3>Account</h3>
       <div class="grid2">
@@ -45,6 +46,8 @@ export function renderSettings(view, ctx) {
       <h3>Danger zone</h3>
       <button class="btn danger" id="wipe">Delete all local data</button>
     </div>`;
+
+  if (ctx.cloud) renderAccountCard(view, ctx.cloud, { onChange: () => ctx.rerender && ctx.rerender() });
 
   view.querySelector('#s-save').addEventListener('click', () => {
     const cur2 = view.querySelector('#s-cur').value.trim().toUpperCase();
