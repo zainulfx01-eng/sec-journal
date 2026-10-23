@@ -4,7 +4,7 @@
 export const APP_NAME = 'Zainul FX Journal';
 // Schema 2 (Stage 2): adds trade.screenshots[] and the reflections map. Migration is additive.
 // The storage key stays the same so existing Stage 1 data is never orphaned.
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 2; // Stage 3 adds no local schema change (sync state is kept under its own key).
 export const STORAGE_KEY = 'zainul-fx-journal:v1';
 
 // Journal calendar and analytics use this timezone for day boundaries (Nigeria, WAT, UTC+1, no DST).
@@ -19,7 +19,7 @@ export const REFLECTION_FIELDS = [
 ];
 export const MAX_REFLECTION = 1000;
 
-// Screenshot attachments: stored as compressed JPEG data URLs INSIDE localStorage (local-only until Stage 3).
+// Screenshot attachments: compressed JPEG data URLs. Stored in localStorage and, when signed in, in the trades jsonb column.
 export const SHOT_KINDS = ['before', 'after'];
 export const SHOT_MAX_DIM = 1280;          // longest side in pixels after resize
 export const SHOT_JPEG_QUALITY = 0.7;
@@ -85,3 +85,10 @@ export const TRADE_FIELDS = [
   { key: 'mistakes', label: 'Mistakes', type: 'text' },
   { key: 'lessons', label: 'Lessons', type: 'text' },
 ];
+
+// Stage 3: Supabase project (cloud sync and email/password accounts).
+// The publishable key is safe to ship in frontend code. Row Level Security on the project keeps each user's rows private.
+// NEVER put a service_role or sb_secret_ key here. supabase.js refuses them and sync stays local-only.
+export const SUPABASE_URL = 'https://seofwjulaeizpcbmeppc.supabase.co';
+export const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_sM_EMIebXelFZd2twX_IFQ_dL3ZWa2g';
+export const SUPABASE_CONFIG = { url: SUPABASE_URL, key: SUPABASE_PUBLISHABLE_KEY };
