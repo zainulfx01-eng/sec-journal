@@ -5,7 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="color-scheme" content="dark light" />
   <meta name="theme-color" content="#0E0E10" />
+  <meta name="application-name" content="Zainul FX Journal" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Zainul Journal" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="description" content="Forex trade journal: log trades, track P/L, review your setups. Works offline." />
   <title>Zainul FX Journal</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png" />
+  <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png" />
   <link rel="stylesheet" href="styles.css" />
   <!-- Telegram Mini Apps SDK. Loads only inside Telegram; harmless in a plain browser. -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -38,5 +47,6 @@
   <div id="modal-root"></div>
 
   <script type="module" src="app.js"></script>
+  <script type="module">import { registerServiceWorker } from './pwa.js'; registerServiceWorker();</script>
 </body>
 </html>
