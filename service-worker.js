@@ -2,7 +2,7 @@
 // Scope: same-origin GET requests only. Everything else (POST/PUT/PATCH/DELETE, supabase.co, Telegram SDK, any cross-origin
 // request) is left alone so the browser sends it straight to the network and Supabase auth and sync are never touched.
 // Bump CACHE_VERSION whenever a precached file changes.
-const CACHE_VERSION = 'zainul-journal-v4';
+const CACHE_VERSION = 'zainul-journal-v5';
 const CACHE_NAME = CACHE_VERSION;
 
 // Every file the app needs to run offline. Keep in sync with the repo root (stage4.test.js checks this).
